@@ -1,0 +1,630 @@
+query,poem_id,title,author,poem_text,similarity,manual_relevance,annotation_method
+moon grief,poem_09697,Reasons,Thomas James,"For our own private reasons
+
+We live in each other for an hour.
+
+Stranger, I take your body and its seasons,
+
+Aware the moon has gone a little sour
+
+For us. The moon hangs up there like a stone
+
+Shaken out of its proper setting.
+
+We lie down in each other. We lie down alone
+
+and watch the moon’s flawed marble getting
+
+Out of hand. What are the dead doing tonight?
+
+The padlocks of their tongues embrace the black,
+
+Each syllable locked in place, tucked out of sight.
+
+Even this moon could never pull them back,
+
+Even if it held them in its arms
+
+And weighed them down with stones,
+
+Took them entirely on their own terms
+
+And piled the orchard’s blossom on their bones.
+
+I am aware of your body and its dangers.
+
+I spread my cloak for you in leafy weather
+
+Where other fugitives and other strangers
+
+Will put their mouths together.",0.5912251472473145,2,objective_proxy_query_overlap_and_similarity
+moon grief,poem_02110,Half Omen Half Hope,Joanna Klink,"When everything finally has been wrecked and further shipwrecked,
+
+When their most ardent dream has been made hollow and unrecognizable,
+
+They will feel inside their limbs the missing shade of blue that lingers
+
+Against hills in the cooler hours before dark, and the moss at the foot of the forest
+
+When green starts to leave it. What they take into their privacy (half of his embrace,
+
+Her violence at play) are shadows of acts which have no farewells in them.
+
+Moons unearth them. And when, in their separate dwellings, their bodies
+
+Feel the next season come, they no longer have anyone to whom
+
+To tell it. Clouds of reverie pass outside the window and a strange emptiness
+
+Peers back in. If they love, it is solely to be adored, it is to scatter and gather
+
+Themselves like hard seeds in a field made fallow by a fire someone years ago set.
+
+In the quiet woods, from the highest trees, there is always something
+
+Weightless falling; and he, who must realize that certain losses are irreparable,
+
+Tells himself at night, before the darkest mirror, that vision keeps him whole.
+
+On the verge of warm and simple sleep they tell themselves certain loves
+
+Are like sheets of dark water, or ice forests, or husks of ships. To stop a thing
+
+Such as this would be to halve a sound that travels out from a silent person’s
+
+Thoughts. The imprint they make on each other’s bodies is worth any pain
+
+They may have caused. Quiet falls around them. And when she reaches
+
+For him the air greens like underwater light and the well-waters drop.
+
+They will see again the shadows of insects.
+
+They will touch the bark and feel each age of the tree fly undisturbed
+
+Into them. If what is no longer present in them cannot be restored,
+
+It can at least be offered. Through long bewildered dusks, stalks grow;
+
+Rains fill and pass out of clouds; animals hover at the edges of fields
+
+With eyes like black pools. For nothing cannot be transformed;
+
+Pleasure and failure feed each other daily. Do not think any breeze,
+
+Any grain of light, shall be withheld. All the stars will sail out for them.",0.5732563734054565,2,objective_proxy_query_overlap_and_similarity
+moon grief,poem_09459,Written with a Pencil Found in Lorine Niedecker’s Front Yard,David Trinidad,"Bewitched
+
+ the boys were out
+
+ in force
+
+Drunken-
+
+ ness and lust
+
+—and full moon
+
+bouncing back
+
+ and forth that
+
+black
+
+above the bars
+
+*
+
+Last night
+
+ it burned
+
+ cigarette
+
+tip
+
+ thru old
+
+ blanket
+
+hole-punched
+
+ gray paper
+
+ sky
+
+Tonight it
+
+ outright
+
+ blinded
+
+One headlight
+
+ or drive-in sci-fi
+
+ eye
+
+*
+
+I’ve been
+
+ alone
+
+long enough
+
+Even the moon
+
+wears a ring
+
+and is full",0.5558621883392334,2,objective_proxy_query_overlap_and_similarity
+moon grief,poem_11357,October,Jacob Polley,"Although a tide turns in the trees 
+
+ the moon doesn't turn the leaves, 
+though chimneys smoke and blue concedes 
+
+ to bluer home-time dark.
+Though restless leaves submerge the park 
+
+ in yellow shallows, ankle-deep, 
+and through each tree the moon shows, halved
+
+ or quartered or complete,
+the moon's no fruit and has no seed, 
+
+ and turns no tide of leaves on paths 
+that still persist but do not lead 
+
+ where they did before dark.
+Although the moonstruck pond stares hard 
+
+ the moon looks elsewhere. Manholes breathe. 
+Each mind's a different, distant world 
+
+ this same moon will not leave.",0.54079669713974,1,objective_proxy_query_overlap_and_similarity
+moon grief,poem_02606,The Fish,William Butler Yeats,"Although you hide in the ebb and flow Of the pale tide when the moon has set, The people of coming days will know About the casting out of my net, And how you have leaped times out of mind Over the little silver cords, And think that you were hard and unkind, And blame you with many bitter words.",0.540683388710022,1,objective_proxy_query_overlap_and_similarity
+sea longing,poem_08356,Virginity,Anna Swir,"One must be brave to live through
+
+a day. What remains
+
+is nothing but the pleasure of longing—very precious.
+
+Longing
+
+purifies as does flying, strengthens as does an effort,
+
+it fashions the soul
+
+as work
+
+fashions the belly.
+
+It is like an athlete, like a runner
+
+who will never
+
+stop running. And this
+
+gives him endurance.
+
+Longing
+
+is nourishing for the strong.
+
+It is like a window
+
+on a high tower, through which
+
+blows the wind of strength.
+
+Longing,
+
+Virginity of happiness.",0.6232218742370605,2,objective_proxy_query_overlap_and_similarity
+sea longing,poem_03920,She longed to be an island,Marjorie Agosín,"She longed to be an island,
+
+She loved the unbridled madness of them, the islands,
+
+She longed to arrive to an island that, perhaps, wasn't an island
+
+Divest herself of the ruinous, stony loves
+
+She longed to be an island
+
+To only inhabit the sea's waistline
+
+And not leave or return
+
+To only be an island
+
+Island of the night
+
+Island of the dawn
+
+Islands.",0.6090214252471924,2,objective_proxy_query_overlap_and_similarity
+sea longing,poem_06123,Le Séducteur,Laura Mullen,"Doesn’t that shining line
+
+Of ocean, broken
+
+Suggest a ship at sea,
+
+Or something? Ah, if to be
+
+“At sea” is to be lost,
+
+Left out, or just un-
+
+Certain of the meaning,
+
+Someone else chimes in.
+
+Nevermind, I’m sure it’s
+
+Nothing, someone else insists
+
+Of this impossible vessel — 
+
+Crafted of affect and lack
+
+Of glasses, the sail a conceit
+
+Of low clouds, the bow
+
+A row of breakers, sun
+
+Glinting off the port-
+
+Hole (imagined) of the cabin
+
+Below whose bed is also,
+
+As we say, the sea-Bed or floor (as if it were
+
+A dwelling down there,
+
+Where the restless sleepers
+
+Are scattered bone). A ship
+
+At sea is only a figure
+
+Of speech somebody else
+
+Claims: a quick shape — 
+
+Suggested by the passage
+
+Of a cloud and the tug
+
+Of  the current; a thin dream
+
+Already almost forgotten ... 
+
+If you can forget the cargo,
+
+Another adds, which was
+
+Human: though that fact
+
+Was somehow less visible
+
+To the traders than the trade
+
+Routes traced out across
+
+The dissolving paper
+
+Map, under a spill of silver
+
+Coins poured out. Life
+
+Is brief, one might sigh
+
+At this point: a matter
+
+Of water in water
+
+Moving, each of us
+
+Carefully bearing
+
+The bags we packed
+
+With cherished flotsam
+
+And jetsam, clutching
+
+A one-way ticket
+
+Printed on a spume
+
+Of wind-blown white ...  
+
+A pretty image, used
+
+To excuse too much:
+
+As if the lives enslaved
+
+Were worthless as this
+
+Sudden welling up
+
+Of what is mostly self-
+
+Pity (salt at my lips,
+
+You say, my vision
+
+Swimming). Nothing.
+
+It’s nothing but ... 
+
+It’s nothing. To beAt sea is also to be,
+
+As we say, astray or
+
+In the dark, hoping
+
+For terra firma, and
+
+To be enlightened,
+
+Soon, as to just what
+
+Was meant by that sad
+
+Laugh and last remark.",0.600172758102417,2,objective_proxy_query_overlap_and_similarity
+sea longing,poem_12467,Self-Dependence,Matthew Arnold,"Weary of myself, and sick of asking What I am, and what I ought to be, At this vessel's prow I stand, which bears me Forwards, forwards, o'er the starlit sea. And a look of passionate desire O'er the sea and to the stars I send: ""Ye who from my childhood up have calm'd me, Calm me, ah, compose me to the end! ""Ah, once more,"" I cried, ""ye stars, ye waters, On my heart your mighty charm renew; Still, still let me, as I gaze upon you, Feel my soul becoming vast like you!"" From the intense, clear, star-sown vault of heaven, Over the lit sea's unquiet way, In the rustling night-air came the answer: ""Wouldst thou be as these are? Live as they. ""Unaffrighted by the silence round them, Undistracted by the sights they see, These demand not that the things without them Yield them love, amusement, sympathy. ""And with joy the stars perform their shining, And the sea its long moon-silver'd roll; For self-poised they live, nor pine with noting All the fever of some differing soul. ""Bounded by themselves, and unregardful In what state God's other works may be, In their own tasks all their powers pouring, These attain the mighty life you see."" O air-born voice! long since, severely clear, A cry like thine in mine own heart I hear: ""Resolve to be thyself; and know that he, Who finds himself, loses his misery!""",0.5999089479446411,2,objective_proxy_query_overlap_and_similarity
+sea longing,poem_11448,Undertow,Dean Young,"People looking at the sea, makes them feel less terrible about themselves, the sea's behaving abominably, seems never satisfied, what it throws away it dashes down then wants back, yanks back. Comparatively, thinks one vice president, what are my frauds but nudged along misunderstandings already there? I can't believe I ever worried about my betrayals, thinks the analyst benefitting facially from the sea's raged-up mist. Obviously I'm not the only one suffering an identity crisis knows the boy who wants to be a lawyer no more. Nothing can stay long, cogitates the dog, so maybe a life of fetch is not a wasted life. And the sea heaves and cleaves and seethes, shoots snot out, goes to bed only to wake shouting in the mansion of the night, pacing, pacing, making tea then spilling it, sudden outloud laughter snort, Oh what the heck, I probably drove myself crazy, thinks the sea, kissing all those strangers, forgiving them no matter what, liars in confession, vomitters of plastics and fossil fuels but what a stricken elixir I've become even to my becalmed depths, while through its head swim a million fishes seemingly made of light eating each other.",0.5987435579299927,2,objective_proxy_query_overlap_and_similarity
+winter memory,poem_01455,Give It Back,Don Bogen,"Give it back—I made it all up
+
+That alcove where surplus glowed under dust
+
+Unfinished, an attic space with nails poking down
+
+Khaki of sheet metal, orange flickering in tubes
+
+Ephemeral as the smells, which were plywood, solder, and Kents
+
+Color words, smell words—I put them in a book
+
+Everything there is still missing
+
+Two lies of remembrance: it was always winter
+
+Things could speak",0.485670655965805,1,objective_proxy_query_overlap_and_similarity
+winter memory,poem_05038,Christmas Trees,William Logan,"How should I now recallthe icy lace of the panelike a sheet of cellophane,or the skies of alcoholpoured over the saltbox town?On that stony New England tableau,the halo of falling snowglared like a waxy crown.Through blue frozen lotsmy giant parents strolled,wrapped tight against the coldlike woolen Argonauts,searching for that tallperfection of Scotch pinefrom the hundreds laid in linelike the dead at Guadalcanal.The clapboard village aglowthat starry stark DecemberI barely now remember,or the brutish ache of snowburning my face like quicklime.Yet one thing was still missing.I saw my parents kissing,perhaps for the last time.",0.4831937551498413,1,objective_proxy_query_overlap_and_similarity
+winter memory,poem_04196,Recycler,Christopher Spaide,"In memory of Dorothy Burns
+
+i. troppo allegro
+
+Remember seasons? Seem to recall those once were easier.
+
+Reasonably sequenced, regal of tempo and temper,
+
+Reliable change flipped heads-over-tails each quarter,
+
+Recovering the hemisphere with four fine suits, knock-off designer.
+
+Recently, someone shuffled, cut the deck into disorder:
+
+Relapse, tic, hiccup, snap, weeks reissued like hipster
+
+Rediscoveries    ...    join the club! No closer
+
+Reading required to diagnose this crazy weather:
+
+Record highs, flourishing lows. April even crueler
+
+Recapitulated each fortnight. Spring hailing like a howitzer.
+
+Reek of summer tickling autumn’s automatic sprinkler.
+
+Redder-neck sunbathers burnt by November’s toaster. A warbler
+
+Retweeting Keats, well into winter. A death for Easter.ii. funeral: march
+
+Remember: misremembering that fishy Faulkner
+
+Remark, the dead are never passed. Ask: will this chapter
+
+Retain familiar cycles? Lather, rinse, repeat. Swelter,
+
+Reins, release. Welter, ruins, reseed. Seconds per
+
+Revolution: top-heavy spinning, simian moods over-
+
+Reaching from swing to swing. For reveler,
+
+Read revelator: elevator going upper, downer,
+
+Results of a heart dialed three degrees warmer.
+
+Remedial Ecclesiastes: a time for X, and a-whole-nother
+
+Reciprocal time for X’s refrain, a dinner
+
+Reservation for six — make that five — and an altogether
+
+Regrettable time for the long and short divisions of disaster.
+
+Remainder: only a matter of time. No more time to matter.iii. scherzo: presto chango
+
+“Remember, the world’s stage was not set for your metaphor, Christopher
+
+Rex, tragicomic motherfucker:
+
+Recognize, why don’t you, your relish for the realish, for hinter-gatherer
+
+Relationships between the dank diamond mine of  your inner
+
+Resources and the Real World (remember that?), our fixer-upper
+
+Residence imperiled enough without your cheesier
+
+Regrets stinking up the joint — shoulda, coulda, woulda, Gouda. Character
+
+Reassessment sure is fun, but don’t run down the theater.
+
+Regards, Responsive Reader / Longtime Listener / Other: _______ ”
+
+(Re: that critique, one childhood scene I’ll offer:
+
+Relatives teasingly wondered why my “gatekeeper,”
+
+Regulator of mind and mouth, would wander
+
+Regularly away from his post. Still no answer.)iv. finale: re-fugue
+
+Remember with me (it’s not all mine to remember),
+
+Remind me, under this never-better weather, whether, if ever,
+
+“Real time” and its dead-ahead march to an unlucky number
+
+Really feel right as a royal flush, since time seems so much fairer
+
+Rewound — recoiling counterclockwise, the seasons’ order
+
+Restoring, entropy decreasing, days uncreasing — now faster,
+
+Regress infinitely, till the Spaide family tree, our off-kilter Calder,
+
+Recollects its fallen leaves — relief, pains, laughter,
+
+Reverse it, past, even, it’s not — trust I tamper
+
+Respectfully, gatekeeper, but why not even further,Reductio ad absurdum, back to the very scene I enter
+
+Rehearsal, ninety-nine degrees, summer-hot, set to simmer,
+
+Ready or not, on the twenty-first day of December?",0.4724878668785095,2,objective_proxy_query_overlap_and_similarity
+winter memory,poem_02511,The Thrush,Edward Thomas,"When Winter's ahead, What can you read in November That you read in April When Winter's dead? I hear the thrush, and I see Him alone at the end of the lane Near the bare poplar's tip, Singing continuously. Is it more that you know Than that, even as in April, So in November, Winter is gone that must go? Or is all your lore Not to call November November, And April April, And Winter Winter—no more? But I know the months all, And their sweet names, April, May and June and October, As you call and call I must remember What died into April And consider what will be born Of a fair November; And April I love for what It was born of, and November For what it will die in, What they are and what they are not, While you love what is kind, What you can sing in And love and forget in All that's ahead and behind.",0.4723427295684814,1,objective_proxy_query_overlap_and_similarity
+winter memory,poem_10469,Frozen In,Annie Finch,"Venice, December
+
+ 
+
+ Ours are the only mouths
+
+ to taste with this smothering slow
+
+ touch, and the only steps
+
+ to sink like bellsounds and cave
+
+ deep into the marble snow.
+
+ 
+
+ Women who go to the window
+
+ to push their arms out to the snow
+
+ and then bring the shutters back in
+
+ follow us as we fall
+
+ past their eyes where the black night lives.
+
+ 
+
+ We are snowflakes at last, as the thick
+
+ never locked, never closed doors
+
+ follow us through squares of light
+
+ their windows have left on the snow.
+
+ Once again, warmth that falls,
+
+ again, though our tracks fill and slow.",0.4545973539352417,1,objective_proxy_query_overlap_and_similarity
+light hope,poem_00205,[That],Leslie Harrison,"That this is the morning in which nothing much
+
+that the sky is still there and the water dresses
+
+accordingly that only at night does the water rest
+
+vanish from sight that the stars are too small too far
+
+to register there that all our names too are writ
+
+invisibly on water that abiding requires more hope
+
+than I can possibly acquire that hope is not a thing
+
+with feathers that hope is a thing with a fist a thin
+
+crust sketched over oceans that hope is what despair
+
+uses for bait come in hope says the water's fine
+
+that hope is the blood with which you write letters
+
+that start dear sea dear ocean stop asking so fucking
+
+much that hope is a telegram delivered by men
+
+in pairs men in uniform a telegram that says missing
+
+stop that says once again presumed lost stop",0.5183964371681213,1,objective_proxy_query_overlap_and_similarity
+light hope,poem_06906,Cui Bono,Thomas Carlyle,"What is Hope? A smiling rainbow Children follow through the wet; ’Tis not here, still yonder, yonder: Never urchin found it yet. What is Life? A thawing iceboard On a sea with sunny shore;— Gay we sail; it melts beneath us; We are sunk, and seen no more. What is Man? A foolish baby, Vainly strives, and fights, and frets; Demanding all, deserving nothing;— One small grave is what he gets.",0.5064516067504883,1,objective_proxy_query_overlap_and_similarity
+light hope,poem_07128,A Dream,Edgar Allan Poe,"In visions of the dark night
+
+ I have dreamed of joy departed—
+But a waking dream of life and light
+
+ Hath left me broken-hearted.
+Ah! what is not a dream by day
+
+ To him whose eyes are cast
+On things around him with a ray
+
+ Turned back upon the past?
+That holy dream—that holy dream,
+
+ While all the world were chiding,
+Hath cheered me as a lovely beam
+
+ A lonely spirit guiding.
+What though that light, thro' storm and night,
+
+ So trembled from afar—
+What could there be more purely bright
+
+ In Truth's day-star?",0.4722157418727875,1,objective_proxy_query_overlap_and_similarity
+light hope,poem_06949,But Men Loved Darkness rather than Light,Richard Crashaw,"The world’s light shines, shine as it will,
+The world will love its darkness still.
+I doubt though when the world’s in hell,
+It will not love its darkness half so well.",0.4687318205833435,1,objective_proxy_query_overlap_and_similarity
+light hope,poem_02465,The Work,Allen Grossman,"A great light is the man who knows the woman he loves
+
+A great light is the woman who knows the man she loves
+
+And carries the light into room after room arousing
+
+The sleepers and looking hard into the face of each
+
+And then sends them asleep again with a kiss
+
+Or a whole night of love
+
+ and goes on and on until
+
+The man and woman who carry the great lights of the
+
+Knowledge of the one lover enter the room
+
+ toward which
+
+Their light is sent and fit the one and the other torch
+
+In a high candelabrum and there is such light
+
+That children leap up
+
+ unless the sea swallow them
+
+In the crossing or hatred or war against which do not
+
+Pray only but be vigilant and set your hand to the work.",0.4663358926773071,1,objective_proxy_query_overlap_and_similarity

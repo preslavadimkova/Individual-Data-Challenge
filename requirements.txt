@@ -1,0 +1,16 @@
+pandas
+numpy
+scikit-learn
+spacy
+networkx
+matplotlib
+plotly
+streamlit
+sentence-transformers
+torch
+tqdm
+requests
+joblib
+nbformat
+jupyter
+ipykernel
