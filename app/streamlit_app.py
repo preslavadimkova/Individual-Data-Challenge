@@ -25,7 +25,7 @@ EMBEDDINGS_PATH = PROCESSED_DIR / "poem_embeddings.npy"
 EMBEDDING_METADATA_PATH = PROCESSED_DIR / "poem_embedding_metadata.csv"
 BASE_SENTENCE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-oss-120b:free")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemma-4-31b-it:free")
 MAX_DISTANCE = 10
 
 st.set_page_config(page_title="Find the Poet Inside You", layout="wide")
@@ -815,14 +815,23 @@ def generate_poem_with_openrouter(prompt, temperature=0.8, max_tokens=400):
     api_key = os.getenv("OPENROUTER_API_KEY", "")
     if not api_key:
         return {"poem": "", "message": "Set OPENROUTER_API_KEY to enable generation."}
-    response = requests.post(
-        f"{OPENROUTER_BASE_URL}/chat/completions",
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"model": OPENROUTER_MODEL, "messages": [{"role": "system", "content": "You write original poems inspired by graph evidence without copying source text."}, {"role": "user", "content": prompt}], "temperature": temperature, "max_tokens": max_tokens},
-        timeout=60,
-    )
-    response.raise_for_status()
-    return {"poem": response.json()["choices"][0]["message"]["content"], "message": "Generated with OpenRouter."}
+    try:
+        response = requests.post(
+            f"{OPENROUTER_BASE_URL}/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={"model": OPENROUTER_MODEL, "messages": [{"role": "system", "content": "You write original poems inspired by graph evidence without copying source text."}, {"role": "user", "content": prompt}], "temperature": temperature, "max_tokens": max_tokens},
+            timeout=60,
+        )
+        response.raise_for_status()
+        poem_content = response.json()["choices"][0]["message"]["content"]
+        if not poem_content or poem_content.strip() == "":
+            return {"poem": "", "message": f"OpenRouter returned empty content. Model: {OPENROUTER_MODEL}. Try a different model or try again."}
+        return {"poem": poem_content, "message": "Generated with OpenRouter."}
+    except requests.exceptions.HTTPError as e:
+        error_detail = e.response.text if hasattr(e.response, 'text') else str(e)
+        return {"poem": "", "message": f"API Error ({e.response.status_code}): {error_detail}"}
+    except Exception as e:
+        return {"poem": "", "message": f"Error: {str(e)}"}
 
 
 def graph_figure(nodes_df, edges_df, height=760, center_id=""):

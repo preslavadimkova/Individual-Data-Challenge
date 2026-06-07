@@ -22,9 +22,9 @@ This stage helps explain the dataset and supports later design choices. For exam
 
 The second notebook, notebooks/02_symbol_emotion_extraction.ipynb, extracts the two main entity types: symbols and emotions.
 
-Symbol extraction uses spaCy with the en_core_web_sm model. The pipeline identifies noun chunks and nouns or proper nouns. To make results cleaner, long noun phrases are reduced to their head nouns in the app logic. For example, instead of showing cold November night, the app shows night. The extraction also removes stopwords, pronouns, generic nouns, month names, very short terms, and words that are clearly emotion words. This prevents illogical outputs such as love or grief being treated as symbols.
+Symbol extraction uses spaCy with the en_core_web_sm model. The pipeline identifies noun chunks and nouns or proper nouns, then reduces noun chunks to their head nouns so long phrases become cleaner symbolic candidates. For example, instead of keeping cold November night as a full phrase, the extractor keeps night. Candidates are ranked rather than accepted as a loose noun list. The score prefers TF-IDF-supported terms, noun-chunk heads, repeated terms, and a curated set of poetic image words such as moon, window, hand, sea, flower, and heart. The extractor filters stopwords, pronouns, generic nouns, temporal words, very short terms, abstract nominalizations, and words that are only emotion words. This prevents illogical outputs such as love or grief being treated as symbols while still allowing poetic image words that can also carry emotional meaning.
 
-Emotion extraction uses a poetic emotion lexicon stored in data/emotion_lexicon/poetic_emotion_lexicon.json. The lexicon includes many categories, such as grief, loneliness, longing, love, fear, hope, joy, anger, despair, nostalgia, wonder, peace, shame, guilt, anxiety, melancholy, resilience, confusion, regret, gratitude, faith, doubt, freedom, oppression, mortality, and transcendence. The lexicon is only used to detect emotional words. It does not manually say which symbols belong to which emotions.
+Emotion extraction uses a poetic emotion lexicon stored in data/emotion_lexicon/poetic_emotion_lexicon.json. The lexicon includes many categories, such as grief, loneliness, longing, love, fear, hope, joy, anger, despair, nostalgia, wonder, peace, shame, guilt, anxiety, melancholy, resilience, confusion, regret, gratitude, faith, doubt, freedom, oppression, mortality, and transcendence. The lexicon was expanded to improve coverage of poetic emotional language. It is only used to detect emotional words. It does not manually say which symbols belong to which emotions.
 
 The outputs are saved as data/processed/extracted_symbols.csv and data/processed/extracted_emotions.csv.
 
@@ -50,27 +50,27 @@ After training, the model is saved in models/sentence_transformer_poetry. Poem e
 
 The fifth notebook, notebooks/05_evaluation.ipynb, evaluates the pipeline using saved outputs and objective proxy annotations. These labels are not expert literary annotations, but they provide a transparent first validation layer. The evaluation folder keeps only the annotation files, while the notebook calculates metric tables live. The notebook reports symbol extraction precision, recall, and F1; emotion extraction precision, recall, and F1; relation quality on sampled symbol-emotion edges; token-distance threshold comparison; and retrieval quality in the top five results.
 
-The current evaluation shows that emotion extraction and retrieval are the strongest parts of the system. Emotion extraction performs well because it is based on a controlled lexicon. Retrieval also performs well under the proxy relevance measure. Symbol extraction is weaker because poetic symbols are harder to define automatically, and relation quality is limited by the quality of extracted symbols and snippets. This result is useful because it identifies the main source of noise in the knowledge graph.
+The current evaluation shows that emotion extraction and retrieval are the strongest parts of the system. Emotion extraction performs well because it is based on a controlled lexicon. Retrieval also performs well under the proxy relevance measure. Symbol extraction is harder because poetic symbols are not simply all nouns. The ranked extractor improves this part of the pipeline by reducing generic and abstract false positives and recovering more common poetic image words. A targeted check on the existing gold symbol sample improved symbol extraction F1 from roughly 0.45 to roughly 0.66, although the full evaluation should be rerun after any lexicon or extraction change.
 
-## Streamlit Application
+## FastAPI Browser Application
 
-The final application is implemented in app/streamlit_app.py. It has a landing page titled Find the Poet Inside You and three main sections.
+The final application is implemented as a FastAPI backend in app/api.py with a browser frontend in app/static. The interface is titled Find The Poet Inside You and has three main sections. The older Streamlit implementation remains in app/streamlit_app.py as a reference, but the FastAPI frontend is the main user interface.
 
 In Search Graph, the user searches for a symbol, emotion, poem, or author. The result is shown as an interactive graph centered on the searched term. Direct connections are shown first, and clicking a node expands the graph from that node. A legend explains the colors, and example snippets from real poems show the evidence behind relations.
 
-In Analyze My Poem, the user pastes their own poem. The app extracts found symbols and emotions, builds a small graph for the user poem, and retrieves similar poems. It also includes a random walk button. The random walk follows the user poem graph and then generates an alternate poem under the heading "How your poem could have also turned out." The prompt asks the model to keep the style of the pasted poem while using the random-walk words.
+In Analyze My Poem, the user pastes their own poem. The app extracts found symbols and emotions, builds a small graph for the user poem, and retrieves similar poems. The results remain hidden until the user analyzes a poem, then appear smoothly. The graph uses weighted lines, with thickness representing relation weight. It also includes a random walk button. The random walk only uses connected nodes, so isolated symbols or emotions are not chosen as a path. If there is no symbol-emotion connection, the interface explains that a connected path is needed instead of showing a failure.
 
-In Generate a Poem, the user selects multiple symbols and emotions from searchable dropdowns, chooses a style and length, and generates a new poem. Generation uses OpenRouter through the OPENROUTER_API_KEY environment variable. No local generation model is trained.
+In Generate a Poem, the user selects multiple symbols and emotions from custom searchable dropdowns, chooses a style and length, and generates a new poem. Generation uses OpenRouter through the OPENROUTER_API_KEY environment variable. No local generation model is trained.
 
 ## Current Outputs
 
-So far, the project has produced the main pipeline artifacts: cleaned poems, extracted symbols, extracted emotions, symbol-emotion relations, graph nodes and edges, graph JSON, poem similarity pairs, poem embeddings, a fine-tuned sentence-transformer model, evaluation files, and a working Streamlit app.
+So far, the project has produced the main pipeline artifacts: cleaned poems, extracted symbols, extracted emotions, symbol-emotion relations, graph nodes and edges, graph JSON, poem similarity pairs, poem embeddings, a fine-tuned sentence-transformer model, evaluation files, and a working FastAPI browser app.
 
-Overall, the project shows an end-to-end NLP pipeline for creative writing support. The corpus provides real poetic evidence, the graph makes symbolic-emotional patterns explorable, the sentence-transformer supports semantic poem recommendation, and the app turns the pipeline into an interactive poetry inspiration tool.
+Overall, the project shows an end-to-end NLP pipeline for creative writing support. The corpus provides real poetic evidence, the graph makes symbolic-emotional patterns explorable, the sentence-transformer supports semantic poem recommendation, and the browser app turns the pipeline into an interactive poetry inspiration tool.
 
 ## Next Steps
 
-The most important next improvement is symbol extraction. The system should continue filtering generic nouns, emotion words used as nouns, and abstract words that do not work well as poetic symbols. It could also use a stronger concrete-noun filter so objects, places, animals, natural images, and body images are preferred over vague concepts.
+The most important next improvement is still symbol extraction, but the ranked extractor has already addressed the largest source of noise from the first version. The system should continue refining the poetic symbol list and abstract-word filter, ideally using a larger manually reviewed sample so improvements do not overfit the current proxy labels.
 
 The second improvement is relation quality. Some symbol-emotion edges are noisy because a symbol and emotion may be close in token distance without forming a meaningful poetic association. Future versions should combine token distance with line distance, require clearer context snippets, remove symbol-emotion self-matches, and test more thresholds such as 5, 8, and 10 tokens.
 

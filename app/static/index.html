@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Find The Poet Inside You</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="styles.css?v=pink-8" />
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+    <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Find The Poet Inside You">
+        <span class="brand-copy">
+          <strong>Find The Poet Inside You</strong>
+        </span>
+      </a>
+      <nav class="tabs" aria-label="App sections">
+        <button class="tab active" data-page="search" aria-label="Search">
+          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+          <span>Search</span>
+        </button>
+        <button class="tab" data-page="analyze" aria-label="Analyze">
+          <i class="ph ph-waveform" aria-hidden="true"></i>
+          <span>Analyze</span>
+        </button>
+        <button class="tab" data-page="generate" aria-label="Generate">
+          <i class="ph ph-pencil-line" aria-hidden="true"></i>
+          <span>Generate</span>
+        </button>
+      </nav>
+    </header>
+
+    <main class="workspace">
+      <section class="page active" id="search">
+        <header class="page-head">
+          <div class="headline-block">
+            <h1>Trace poetic associations.</h1>
+            <p>Symbols, emotions, poems, and authors arranged as an evidence graph.</p>
+          </div>
+          <div class="stats" aria-label="Graph totals">
+            <span id="graphNodeCount">0 nodes</span>
+            <span id="graphEdgeCount">0 edges</span>
+          </div>
+        </header>
+
+        <section class="control-strip" aria-label="Graph search controls">
+          <label>
+            <span>Type</span>
+            <select id="searchType">
+              <option value="symbol">Symbol</option>
+              <option value="emotion">Emotion</option>
+              <option value="poem">Poem</option>
+              <option value="author">Author</option>
+            </select>
+          </label>
+          <label class="grow">
+            <span>Search term</span>
+            <input id="searchQuery" value="moon" autocomplete="off" />
+          </label>
+          <label>
+            <span class="range-label">Connections <output id="topKValue" for="topK">18</output></span>
+            <input id="topK" type="range" min="5" max="40" value="18" />
+          </label>
+          <button id="searchButton" class="primary">
+            <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+            <span>Search</span>
+          </button>
+        </section>
+
+        <div class="graph-layout search-graph-layout">
+          <section class="graph-stage" aria-label="Poetry graph">
+            <div class="stage-head">
+              <div>
+                <h2>Association map</h2>
+                <span id="graphSubtitle" class="soft-label">Awaiting graph data</span>
+              </div>
+              <div class="legend" aria-label="Node color legend">
+                <span><b class="legend-dot symbol-dot"></b>Symbol</span>
+                <span><b class="legend-dot emotion-dot"></b>Emotion</span>
+                <span><b class="legend-dot poem-dot"></b>Poem</span>
+                <span><b class="weight-line"></b>Weight</span>
+              </div>
+            </div>
+            <div class="graph-shell">
+              <div id="graph"></div>
+            </div>
+          </section>
+        </div>
+        <div id="selectedNode" class="visually-hidden">No node selected yet.</div>
+        <section class="evidence-panel">
+          <div class="panel-heading">
+            <h2>Evidence of strongest relations</h2>
+          </div>
+          <div id="evidenceList" class="stack evidence-grid"></div>
+          <button id="loadMoreEvidence" class="load-more-evidence" type="button">Load more</button>
+        </section>
+      </section>
+
+      <section class="page" id="analyze">
+        <header class="page-head">
+          <div class="headline-block">
+            <h1>Analyze your poem.</h1>
+            <p>Symbol extraction, emotion matches, graph paths, and similar poems in one workspace.</p>
+          </div>
+        </header>
+
+        <div class="analyze-grid pending" id="analysisWorkspace">
+          <section class="editor-panel">
+            <div class="panel-heading">
+              <h2>Poem input</h2>
+              <span class="soft-label">Plain text</span>
+            </div>
+            <textarea id="poemText" placeholder="Paste or write your poem here"></textarea>
+            <div class="button-row">
+              <button id="analyzeButton" class="primary">
+                <i class="ph ph-waveform" aria-hidden="true"></i>
+                <span>Analyze</span>
+              </button>
+              <button id="walkButton">
+                <i class="ph ph-shuffle-angular" aria-hidden="true"></i>
+                <span>Random walk</span>
+              </button>
+            </div>
+            <div id="walkResult" class="result-box" aria-live="polite"></div>
+          </section>
+          <section class="insight-panel analysis-results" aria-hidden="true">
+            <div class="panel-heading">
+              <h2>Extracted signals</h2>
+              <span class="soft-label">From your poem</span>
+            </div>
+            <div class="signal-group">
+              <h3>Found symbols</h3>
+              <div id="symbolChips" class="chips"></div>
+            </div>
+            <div class="signal-group">
+              <h3>Found emotions</h3>
+              <div id="emotionChips" class="chips"></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="graph-layout compact analysis-results analyze-result-layout" aria-hidden="true">
+          <section class="graph-stage" aria-label="User poem graph">
+            <div class="stage-head">
+              <div>
+                <h2>Your poem graph</h2>
+                <span class="soft-label">Visible after analysis</span>
+              </div>
+            </div>
+            <div class="graph-shell">
+              <div id="userGraph"></div>
+            </div>
+          </section>
+          <section class="similar-panel">
+            <div class="panel-heading">
+              <h2>Similar poems</h2>
+              <span class="soft-label">Closest matches from the corpus</span>
+            </div>
+            <div id="similarPoems" class="stack similar-grid"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="page" id="generate">
+        <header class="page-head">
+          <div class="headline-block">
+            <h1>Generate from graph evidence.</h1>
+            <p>Choose associations, set a style, and draft a poem from the visible corpus signals.</p>
+          </div>
+        </header>
+
+        <div class="generate-grid">
+          <section class="generator-panel">
+            <div class="panel-heading">
+              <h2>Inputs</h2>
+              <span class="soft-label">Controlled inspiration</span>
+            </div>
+            <label class="autocomplete-field">
+              <span>Symbols</span>
+              <input id="symbolFilter" placeholder="Type to add symbols" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="symbolMenu" />
+              <div id="symbolMenu" class="autocomplete-menu" role="listbox" hidden></div>
+            </label>
+            <div id="selectedSymbols" class="chips selectable"></div>
+            <label class="autocomplete-field">
+              <span>Emotions</span>
+              <input id="emotionFilter" placeholder="Type to add emotions" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="emotionMenu" />
+              <div id="emotionMenu" class="autocomplete-menu" role="listbox" hidden></div>
+            </label>
+            <div id="selectedEmotions" class="chips selectable"></div>
+            <label>
+              <span>Style</span>
+              <input id="styleInput" placeholder="clear, image-rich, contemporary lyric" />
+            </label>
+            <label>
+              <span>Length</span>
+              <select id="lengthInput" class="length-select">
+                <option>short</option>
+                <option>medium</option>
+                <option>long</option>
+              </select>
+            </label>
+            <button id="generateButton" class="primary wide-button">
+              <i class="ph ph-sparkle" aria-hidden="true"></i>
+              <span>Generate</span>
+            </button>
+          </section>
+          <section class="poem-output">
+            <div class="panel-heading">
+              <h2>Generated poem</h2>
+              <span class="soft-label">OpenRouter output</span>
+            </div>
+            <pre id="generatedPoem">Your generated poem will appear here.</pre>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js?v=pink-8"></script>
+  </body>
+</html>
