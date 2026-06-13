@@ -16,6 +16,14 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sklearn.metrics.pairwise import cosine_similarity
 
+from app.symbol_filter import (
+    basic_symbol_rejection_reason,
+    filter_relations,
+    filter_symbol_records,
+    normalize_symbol_text,
+    token_symbol_rejection_reason,
+)
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 APP_DIR = PROJECT_ROOT / "app"
@@ -34,45 +42,7 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemma-4-31b-it:free")
 MAX_DISTANCE = 10
 MAX_USER_SYMBOLS = 12
-
-POETIC_SYMBOLS = {
-    "air", "angel", "animal", "apple", "arm", "ash", "baby", "beach", "bell", "bird",
-    "blood", "body", "bone", "book", "branch", "bread", "breath", "bridge", "brother",
-    "bull", "candle", "car", "cat", "chair", "child", "church", "city", "clock",
-    "cloud", "coat", "color", "corner", "country", "cross", "crow", "cup", "curse",
-    "daughter", "dawn", "devil", "dog", "door", "doorway",
-    "dream", "dress", "drop", "dust", "earth", "eye", "face", "father", "field",
-    "finger", "fire", "fish", "flame", "flower", "foot", "forest", "garden", "ghost",
-    "glass", "gold", "grain", "grass", "grave", "ground", "hair", "hand", "hat",
-    "hay", "head", "heart", "heath", "hill", "home", "horse", "house", "image",
-    "island", "kitchen", "lamp", "land", "leaf", "leg", "lens", "letter", "light",
-    "line", "lip", "mirror", "moon", "mother", "mountain", "mouth", "nature", "neck",
-    "night", "ocean", "opera", "paper", "path", "photo", "plague", "poet", "print",
-    "rain", "river", "road", "rock", "room", "root", "rose", "salt", "school", "sea",
-    "season", "seed", "shadow", "ship", "shore", "shoulder", "silk", "sister", "skin",
-    "sky", "snow", "son", "song", "sound", "space", "spirit", "star", "stone", "story",
-    "street", "study", "sun", "table", "throat", "tide", "tongue", "trail", "tree",
-    "valley", "wall", "water", "wave", "wheel", "window", "wind", "wing", "wood",
-    "worker", "year",
-}
-GENERIC_SYMBOL_NOUNS = {
-    "thing", "things", "time", "times", "day", "days", "way", "ways", "man", "men",
-    "woman", "women", "person", "persons", "people", "life", "lives", "world", "worlds",
-    "place", "places", "one", "ones", "someone", "everyone", "something",
-    "nothing", "everything", "anything", "name", "names", "word", "words", "part",
-    "parts", "kind", "sort", "type", "lot", "lots", "bit", "bits", "piece", "pieces",
-    "use", "uses", "case", "fact", "idea", "ideas", "form", "forms", "effect", "effects",
-    "result", "results", "problem", "problems", "question", "questions", "number",
-    "numbers", "example", "examples", "point", "points", "matter", "matters", "object",
-    "objects", "stuff", "self", "selves", "else", "today", "tomorrow", "yesterday",
-}
-TEMPORAL_SYMBOL_WORDS = {
-    "january", "february", "march", "april", "may", "june", "july", "august",
-    "september", "october", "november", "novemeber", "december", "monday", "tuesday",
-    "wednesday", "thursday", "friday", "saturday", "sunday",
-}
-ABSTRACT_SYMBOL_SUFFIXES = ("ness", "tion", "sion", "ment", "ance", "ence", "ity", "ism", "ship", "hood", "acy", "ure")
-BAD_SYMBOL_ENTITY_LABELS = {"DATE", "TIME", "CARDINAL", "ORDINAL", "PERCENT", "MONEY", "QUANTITY"}
+MIN_USER_SYMBOL_SCORE = 2
 
 app = FastAPI(title="Poetry Graph App")
 app.add_middleware(
@@ -171,6 +141,69 @@ def emotion_word_set():
     return words
 
 
+@lru_cache(maxsize=1)
+def emotion_category_set():
+    return {str(category).lower() for category in load_emotion_lexicon()}
+
+
+@lru_cache(maxsize=1)
+def filtered_relations_cached() -> pd.DataFrame:
+    relations = read_csv(RELATIONS_PATH)
+    if relations.empty:
+        return relations
+    return filter_relations(relations, cached_nlp(), emotion_words=emotion_category_set())
+
+
+def filtered_relations() -> pd.DataFrame:
+    return filtered_relations_cached().copy()
+
+
+@lru_cache(maxsize=1)
+def public_symbol_set() -> set[str]:
+    relations = filtered_relations_cached()
+    if relations.empty or "source_symbol" not in relations.columns:
+        return set()
+    return set(relations["source_symbol"].dropna().astype(str).map(normalize_symbol_text))
+
+
+def symbol_label_from_id(node_id):
+    text = str(node_id)
+    return normalize_symbol_text(text.replace("symbol:", "", 1)) if text.startswith("symbol:") else ""
+
+
+def is_public_symbol_label(value):
+    return normalize_symbol_text(value) in public_symbol_set()
+
+
+def is_public_symbol_node_id(node_id):
+    label = symbol_label_from_id(node_id)
+    return not label or label in public_symbol_set()
+
+
+def filter_public_graph_frames(nodes: pd.DataFrame, edges: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    blocked_ids = set()
+    if not nodes.empty and {"id", "type", "label"}.issubset(nodes.columns):
+        symbol_nodes = nodes[nodes["type"] == "symbol"].copy()
+        blocked_ids.update(
+            symbol_nodes[~symbol_nodes["label"].fillna("").map(is_public_symbol_label)]["id"].astype(str).tolist()
+        )
+    if not edges.empty:
+        for column in ("source", "target"):
+            blocked_ids.update(
+                value for value in edges[column].dropna().astype(str).tolist()
+                if value.startswith("symbol:") and not is_public_symbol_node_id(value)
+            )
+    if blocked_ids:
+        if not nodes.empty and "id" in nodes.columns:
+            nodes = nodes[~nodes["id"].astype(str).isin(blocked_ids)].copy()
+        if not edges.empty and {"source", "target"}.issubset(edges.columns):
+            edges = edges[
+                ~edges["source"].astype(str).isin(blocked_ids)
+                & ~edges["target"].astype(str).isin(blocked_ids)
+            ].copy()
+    return nodes, edges
+
+
 def df_records(df: pd.DataFrame) -> list[dict]:
     if df.empty:
         return []
@@ -180,11 +213,6 @@ def df_records(df: pd.DataFrame) -> list[dict]:
 
 def line_number_from_char(text, char_index):
     return text[:char_index].count("\n") + 1
-
-
-def normalize_symbol_text(value):
-    text = re.sub(r"\s+", " ", str(value).lower()).strip()
-    return re.sub(r"^[^a-z]+|[^a-z]+$", "", text)
 
 
 def emotion_lookup_from_lexicon(lexicon):
@@ -199,44 +227,27 @@ def is_emotion_word(value):
     return str(value).lower().strip() in emotion_word_set()
 
 
-def is_abstract_symbol(lemma):
-    return lemma not in POETIC_SYMBOLS and any(lemma.endswith(suffix) for suffix in ABSTRACT_SYMBOL_SUFFIXES)
+def is_emotion_category(value):
+    return str(value).lower().strip() in emotion_category_set()
 
 
 def is_valid_symbol_token(token, lemma, emotion_words):
-    if not lemma or len(lemma) < 3 or not re.search(r"[a-z]", lemma):
-        return False
-    if token.pos_ not in {"NOUN", "PROPN"} or token.is_stop:
-        return False
-    if lemma in GENERIC_SYMBOL_NOUNS or lemma in TEMPORAL_SYMBOL_WORDS:
-        return False
-    if lemma in emotion_words and lemma not in POETIC_SYMBOLS:
-        return False
-    if is_abstract_symbol(lemma):
-        return False
-    if token.ent_type_ in BAD_SYMBOL_ENTITY_LABELS and lemma not in POETIC_SYMBOLS:
-        return False
-    return True
+    return not token_symbol_rejection_reason(token, lemma, emotion_words=emotion_words)
 
 
 def symbol_candidate_score(item, frequency):
-    symbol = item["symbol"]
     score = 0
-    if symbol in POETIC_SYMBOLS:
-        score += 3
     if item["source_method"] == "noun_chunk_head":
-        score += 1
+        score += 2
     if item["pos"] == "NOUN":
         score += 1
-    if item["pos"] == "PROPN" and symbol not in POETIC_SYMBOLS:
-        score -= 1
     if frequency > 1:
         score += 1
     return score
 
 
 def extract_symbols_from_text(text, nlp):
-    emotion_words = emotion_word_set()
+    emotion_words = emotion_category_set()
     doc = nlp(text)
 
     candidates = []
@@ -269,7 +280,7 @@ def extract_symbols_from_text(text, nlp):
     best_by_symbol = {}
     for item in candidates:
         score = symbol_candidate_score(item, frequencies.get(item["symbol"], 1))
-        if score < 2:
+        if score < MIN_USER_SYMBOL_SCORE:
             continue
         ranked_item = dict(item)
         ranked_item["score"] = score
@@ -279,13 +290,13 @@ def extract_symbols_from_text(text, nlp):
 
     ranked = sorted(best_by_symbol.values(), key=lambda item: (-item["score"], item["start_token"], item["symbol"]))
     rows = []
-    for item in ranked[:MAX_USER_SYMBOLS]:
+    for item in ranked:
         item = dict(item)
         item["source_method"] = f"{item['source_method']}+ranked"
         item.pop("pos", None)
         item.pop("score", None)
         rows.append(item)
-    return rows
+    return filter_symbol_records(rows, nlp, emotion_words=emotion_words, limit=MAX_USER_SYMBOLS)
 
 
 def extract_emotions_from_text(text, nlp, lexicon):
@@ -344,7 +355,25 @@ def node_id_for_search(search_type, query):
     if nodes.empty:
         return ""
     value = query.lower().strip()
-    if search_type in {"symbol", "emotion"}:
+    if search_type == "symbol":
+        if basic_symbol_rejection_reason(value, emotion_words=emotion_category_set()):
+            return ""
+        public_symbols = public_symbol_set()
+        if value not in public_symbols and not any(value in symbol for symbol in public_symbols):
+            return ""
+        matches = nodes[
+            (nodes["type"] == "symbol")
+            & (nodes["label"].fillna("").map(is_public_symbol_label))
+            & (nodes["label"].fillna("").str.lower() == value)
+        ]
+        if matches.empty:
+            matches = nodes[
+                (nodes["type"] == "symbol")
+                & (nodes["label"].fillna("").map(is_public_symbol_label))
+                & (nodes["label"].fillna("").str.lower().str.contains(value, na=False, regex=False))
+            ]
+        return matches["id"].iloc[0] if not matches.empty else ""
+    if search_type == "emotion":
         matches = nodes[(nodes["type"] == search_type) & (nodes["label"].fillna("").str.lower() == value)]
         if matches.empty:
             matches = nodes[(nodes["type"] == search_type) & (nodes["label"].fillna("").str.lower().str.contains(value, na=False, regex=False))]
@@ -364,16 +393,19 @@ def node_id_for_search(search_type, query):
 
 def connected_edges_for_node(node_id, top_k=18):
     edges = read_csv(GRAPH_EDGES_PATH)
-    if edges.empty or not node_id:
+    if edges.empty or not node_id or not is_public_symbol_node_id(node_id):
         return pd.DataFrame()
     connected = edges[(edges["source"] == node_id) | (edges["target"] == node_id)].copy()
+    if connected.empty:
+        return connected
+    _, connected = filter_public_graph_frames(pd.DataFrame(), connected)
     if connected.empty:
         return connected
     bad_relation = (
         (connected["type"] == "NEAR_EMOTION")
         & connected["source"].fillna("").str.startswith("symbol:")
         & (
-            connected["source"].fillna("").str.replace("symbol:", "", regex=False).map(is_emotion_word)
+            connected["source"].fillna("").str.replace("symbol:", "", regex=False).map(is_emotion_category)
             | (connected["source"].fillna("").str.replace("symbol:", "", regex=False) == connected["target"].fillna("").str.replace("emotion:", "", regex=False))
         )
     )
@@ -394,11 +426,12 @@ def graph_records_for_node(node_id, top_k=18):
     if not connected.empty:
         ids.update(connected["source"].tolist())
         ids.update(connected["target"].tolist())
-    return df_records(nodes[nodes["id"].isin(ids)].copy()), df_records(connected.copy())
+    visible_nodes, visible_edges = filter_public_graph_frames(nodes[nodes["id"].isin(ids)].copy(), connected.copy())
+    return df_records(visible_nodes), df_records(visible_edges)
 
 
 def evidence_for_edges(edges):
-    relations = read_csv(RELATIONS_PATH)
+    relations = filtered_relations()
     if relations.empty or not edges:
         return []
     rows = []
@@ -411,7 +444,7 @@ def evidence_for_edges(edges):
             continue
         symbol = source.replace("symbol:", "", 1)
         emotion = target.replace("emotion:", "", 1)
-        if is_emotion_word(symbol) or symbol == emotion:
+        if not is_public_symbol_label(symbol) or is_emotion_category(symbol) or symbol == emotion:
             continue
         matches = relations[(relations["source_symbol"] == symbol) & (relations["target_emotion"] == emotion)].copy()
         if matches.empty:
@@ -466,25 +499,26 @@ Use the graph only as inspiration."""
 
 def build_random_walk_prompt(original_poem, walk_labels, relations):
     relation_text = "; ".join(f"{row['source_symbol']} may suggest {row['target_emotion']}" for row in relations[:8])
-    walk_text = " -> ".join(walk_labels)
+    walk_text = " to ".join(walk_labels)
     required_words = ", ".join(walk_labels)
-    return f"""You are helping a beginner poet imagine an alternate version of their poem.
-Write in the style, tone, rhythm, level of simplicity, imagery density, and line length pattern of the original poem, but do not copy its lines or phrases.
-Use this suggestive path from their poem's symbol-emotion graph:
+    return f"""You are helping a beginner poet write an original poem from a small symbol-emotion path.
+Use the following inspiration graph:
 
-Random walk: {walk_text}
-Required words or very close forms that must visibly appear in the poem: {required_words}
-Possible symbol-emotion connections: {relation_text}
+Path: {walk_text}
+Required images or moods: {required_words}
+Possible symbol-emotion relations: {relation_text or 'no explicit relation selected'}
 
 Original poem:
 {original_poem}
 
-Write a short original poem showing how the poem could have also turned out.
-Keep it stylistically close to the pasted poem.
-Include every required word from the random walk, especially concrete symbols.
-Do not replace concrete required words with only a mood or implication.
+Write a short alternate poem in the style, tone, rhythm, simplicity, imagery density, and line length pattern of the original poem.
+Make it feel like a real poem, not an explanation, list, summary, or graph description.
+Use line breaks and, if fitting, short stanzas.
+Include the required images or moods naturally, especially concrete symbols.
+Do not mention the graph, random walk, path, or prompt.
 Do not copy the original poem.
-Use the random walk as inspiration."""
+Do not copy the example wording.
+Return only the poem."""
 
 
 def generate_poem_with_openrouter(prompt, temperature=0.8, max_tokens=400):
@@ -528,16 +562,14 @@ def random_walk_on_visible_graph(nodes, edges, steps=5):
         return []
 
     current = random.choice(starts)
-    previous = None
     path = [current]
+    visited = {current}
     for _ in range(steps):
-        neighbors = list(adjacency.get(current, set()))
-        if previous and len(neighbors) > 1:
-            neighbors = [neighbor for neighbor in neighbors if neighbor != previous]
+        neighbors = [neighbor for neighbor in adjacency.get(current, set()) if neighbor not in visited]
         if not neighbors:
             break
-        previous = current
         current = random.choice(neighbors)
+        visited.add(current)
         path.append(current)
     return path
 
@@ -545,6 +577,18 @@ def random_walk_on_visible_graph(nodes, edges, steps=5):
 def labels_for_path(path, nodes):
     labels = {node["id"]: node.get("label", node["id"].split(":", 1)[-1]) for node in nodes}
     return [labels.get(node_id, node_id.split(":", 1)[-1]) for node_id in path]
+
+
+def unique_walk_labels(labels):
+    seen = set()
+    unique = []
+    for label in labels:
+        key = str(label).strip().lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        unique.append(label)
+    return unique
 
 
 @app.get("/")
@@ -569,12 +613,31 @@ def root_app_js():
 
 @app.get("/api/options")
 def options():
-    relations = read_csv(RELATIONS_PATH)
-    if relations.empty:
-        return {"symbols": [], "emotions": []}
+    relations = filtered_relations()
+    nodes = read_csv(GRAPH_NODES_PATH)
+    poems = read_csv(POEMS_CLEAN_PATH)
+
+    symbols = []
+    emotions = []
+    if not relations.empty:
+        symbols = sorted(relations["source_symbol"].dropna().astype(str).unique().tolist())
+        emotions = sorted(relations["target_emotion"].dropna().astype(str).unique().tolist())
+
+    poem_titles = []
+    if not poems.empty and "title" in poems.columns:
+        poem_titles = sorted(poems["title"].dropna().astype(str).unique().tolist())
+
+    authors = []
+    if not nodes.empty:
+        authors = sorted(nodes[nodes["type"] == "author"]["label"].dropna().astype(str).unique().tolist())
+    elif not poems.empty and "author" in poems.columns:
+        authors = sorted(poems["author"].dropna().astype(str).unique().tolist())
+
     return {
-        "symbols": sorted(relations["source_symbol"].dropna().astype(str).unique().tolist()),
-        "emotions": sorted(relations["target_emotion"].dropna().astype(str).unique().tolist()),
+        "symbols": symbols,
+        "emotions": emotions,
+        "poems": poem_titles,
+        "authors": authors,
     }
 
 
@@ -601,6 +664,7 @@ def analyze(payload: AnalyzeRequest):
         return {"symbols": [], "emotions": [], "relations": [], "nodes": [], "edges": [], "similar_poems": []}
     nlp = cached_nlp()
     symbols = extract_symbols_from_text(text, nlp)
+    symbols = filter_symbol_records(symbols, nlp, emotion_words=emotion_category_set(), limit=MAX_USER_SYMBOLS)
     emotions = extract_emotions_from_text(text, nlp, load_emotion_lexicon())
     relations = extract_user_relations(text, symbols, emotions)
     nodes, edges = build_user_poem_graph(symbols, emotions, relations)
@@ -616,21 +680,31 @@ def analyze(payload: AnalyzeRequest):
 
 @app.post("/api/generate")
 def generate(payload: GenerateRequest):
-    relations_df = read_csv(RELATIONS_PATH)
-    selected = relations_df[(relations_df["source_symbol"].isin(payload.symbols)) | (relations_df["target_emotion"].isin(payload.emotions))] if not relations_df.empty else pd.DataFrame()
+    relations_df = filtered_relations()
+    valid_symbols = [normalize_symbol_text(symbol) for symbol in payload.symbols if is_public_symbol_label(symbol)]
+    valid_emotions = sorted(set(payload.emotions) & set(relations_df["target_emotion"].dropna().astype(str))) if not relations_df.empty else []
+    selected = relations_df[(relations_df["source_symbol"].isin(valid_symbols)) | (relations_df["target_emotion"].isin(valid_emotions))] if not relations_df.empty else pd.DataFrame()
     relation_strings = [f"{row.source_symbol} -> {row.target_emotion}" for row in selected.head(10).itertuples(index=False)]
     snippets = []
     if not selected.empty and "context_snippet" in selected.columns:
         snippets_series = selected["context_snippet"].dropna().astype(str)
         snippets = snippets_series[~snippets_series.str.lower().isin(["", "nan", "none"])].head(5).tolist()
-    prompt = build_generation_prompt(payload.symbols, payload.emotions, relation_strings, snippets, style=payload.style, length=payload.length)
-    return generate_poem_with_openrouter(prompt)
+    prompt = build_generation_prompt(valid_symbols, valid_emotions, relation_strings, snippets, style=payload.style, length=payload.length)
+    result = generate_poem_with_openrouter(prompt)
+    result["similar_poems"] = find_similar_poems(result["poem"], top_k=5) if result.get("poem") else []
+    return result
 
 
 @app.post("/api/random-walk")
 def random_walk_generate(payload: RandomWalkRequest):
-    path = random_walk_on_visible_graph(payload.nodes, payload.edges, steps=payload.steps)
-    walk_labels = labels_for_path(path, payload.nodes)
+    symbol_nodes = [
+        node for node in payload.nodes
+        if node.get("type") != "symbol" or is_public_symbol_label(node.get("label", symbol_label_from_id(node.get("id", ""))))
+    ]
+    node_ids = {node.get("id") for node in symbol_nodes}
+    edges = [edge for edge in payload.edges if edge.get("source") in node_ids and edge.get("target") in node_ids]
+    path = random_walk_on_visible_graph(symbol_nodes, edges, steps=payload.steps)
+    walk_labels = unique_walk_labels(labels_for_path(path, symbol_nodes))
     if len(walk_labels) < 2:
         return {"path": walk_labels, "poem": "", "message": "The graph needs at least one symbol-emotion connection before a random walk can generate an alternate poem."}
     prompt = build_random_walk_prompt(payload.poem_text, walk_labels, payload.relations)

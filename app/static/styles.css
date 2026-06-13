@@ -611,6 +611,36 @@ textarea:focus {
   line-height: 1.45;
 }
 
+.walk-path {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 13px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line);
+}
+
+.walk-path span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.walk-path strong {
+  display: block;
+  color: var(--ink);
+}
+
+.walk-poem {
+  white-space: pre-wrap;
+  margin: 0;
+  color: var(--ink);
+  font-family: "Segoe UI", Aptos, Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.58;
+}
+
 .stack {
   display: grid;
   gap: 10px;
@@ -631,6 +661,10 @@ textarea:focus {
 .poem-card strong {
   display: block;
   margin-bottom: 5px;
+}
+
+.poem-excerpt {
+  white-space: pre-wrap;
 }
 
 .relation-word {
@@ -814,6 +848,10 @@ textarea:focus {
 
 .poem-output {
   min-height: 100%;
+}
+
+.generated-similar-panel {
+  margin-top: 18px;
 }
 
 .length-select {

@@ -1,7 +1,7 @@
 const state = {
   graph: { nodes: [], edges: [], centerId: "", cy: null, evidence: [], evidenceVisible: 10 },
   user: { poemText: "", symbols: [], emotions: [], relations: [], nodes: [], edges: [], similarPoems: [], cy: null },
-  options: { symbols: [], emotions: [] },
+  options: { symbols: [], emotions: [], poems: [], authors: [] },
   selectedSymbols: new Set(),
   selectedEmotions: new Set(),
 };
@@ -361,15 +361,7 @@ function renderAnalyzeResults(data) {
   $("emotionChips").innerHTML = emotions.length
     ? emotions.map((value) => chip(value, "emotion")).join("")
     : `<span class="is-empty">No lexicon emotions found.</span>`;
-  $("similarPoems").innerHTML = similarPoems.length
-    ? similarPoems.map((poem) => `
-      <article class="poem-card">
-        <strong>${escapeHtml(poem.title || "Untitled")}</strong>
-        <span class="muted">${escapeHtml(poem.author || "Unknown")}</span>
-        <div>${escapeHtml(poem.poem_text || "").slice(0, 700)}</div>
-      </article>
-    `).join("")
-    : `<div class="is-empty">Similar poems appear when embeddings are available.</div>`;
+  renderSimilarPoems("similarPoems", similarPoems, "Similar poems appear when embeddings are available.");
 
   if (state.user.cy) state.user.cy.destroy();
   state.user.cy = renderGraph("userGraph", data.nodes || [], data.edges || [], data.nodes?.[0]?.id || "", () => {});
@@ -417,9 +409,13 @@ async function randomWalk() {
       relations: state.user.relations,
       steps: 5,
     });
+    const pathText = data.path?.length ? data.path.join(" to ") : "Random walk";
     $("walkResult").innerHTML = `
-      <strong>${data.path?.length ? escapeHtml(data.path.join(" to ")) : "Random walk"}</strong>
-      <div>${escapeHtml(data.poem || data.message || "")}</div>
+      <div class="walk-path">
+        <span>Path</span>
+        <strong>${escapeHtml(pathText)}</strong>
+      </div>
+      <pre class="walk-poem">${escapeHtml(data.poem || data.message || "")}</pre>
     `;
   } catch (error) {
     toast(apiErrorMessage("Random walk generation failed."));
@@ -432,7 +428,7 @@ async function randomWalk() {
 async function loadOptions() {
   const response = await fetch(apiUrl("/api/options"));
   if (!response.ok) throw new Error(await response.text());
-  state.options = await response.json();
+  state.options = { symbols: [], emotions: [], poems: [], authors: [], ...(await response.json()) };
   renderSelectedTerms();
 }
 
@@ -448,16 +444,21 @@ function renderSelectedTerms() {
 function addTermFromInput(input, set, options) {
   const value = input.value.trim().toLowerCase();
   if (!value) return;
-  const exact = options.find((item) => item.toLowerCase() === value) || value;
+  const exact = options.find((item) => item.toLowerCase() === value);
+  if (!exact) {
+    toast("Choose a term from the approved list.");
+    return;
+  }
   set.add(exact);
   input.value = "";
   renderSelectedTerms();
   hideAutocompleteMenus();
 }
 
-function autocompleteMatches(value, options, selectedSet) {
+function autocompleteMatches(value, options, selectedSet = new Set()) {
   const query = value.trim().toLowerCase();
-  const available = options.filter((item) => !selectedSet.has(item));
+  const sourceOptions = Array.isArray(options) ? options : [];
+  const available = sourceOptions.filter((item) => !selectedSet.has(item));
   if (!query) return available.slice(0, AUTOCOMPLETE_LIMIT);
   return available
     .filter((item) => item.toLowerCase().includes(query))
@@ -524,10 +525,55 @@ function bindAutocomplete(inputId, menuId, selectedSet, optionsGetter) {
   });
 }
 
+function searchOptionsForType() {
+  const type = $("searchType")?.value || "symbol";
+  if (type === "symbol") return state.options.symbols;
+  if (type === "emotion") return state.options.emotions;
+  if (type === "poem") return state.options.poems;
+  if (type === "author") return state.options.authors;
+  return [];
+}
+
+function bindSearchAutocomplete() {
+  const input = $("searchQuery");
+  const menu = $("searchMenu");
+  const type = $("searchType");
+  if (!input || !menu || !type) return;
+
+  const render = () => renderAutocompleteMenu(input, menu, searchOptionsForType(), new Set());
+
+  input.addEventListener("input", render);
+  input.addEventListener("focus", render);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      hideAutocompleteMenus();
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      hideAutocompleteMenus();
+      searchGraph();
+    }
+  });
+  menu.addEventListener("mousedown", (event) => event.preventDefault());
+  menu.addEventListener("click", (event) => {
+    const option = event.target.closest(".autocomplete-option");
+    if (!option) return;
+    input.value = option.dataset.value || "";
+    hideAutocompleteMenus();
+    input.focus();
+  });
+  type.addEventListener("change", () => {
+    hideAutocompleteMenus();
+    if (document.activeElement === input) render();
+  });
+}
+
 async function generatePoem() {
   const button = $("generateButton");
   setLoading(button, true, "Writing");
   $("generatedPoem").textContent = "Writing from selected graph signals...";
+  setGeneratedSimilarPoems([], false);
   try {
     const data = await postJson("/api/generate", {
       symbols: [...state.selectedSymbols],
@@ -536,11 +582,43 @@ async function generatePoem() {
       length: $("lengthInput").value,
     });
     $("generatedPoem").textContent = displayText(data.poem || data.message || "No poem returned.");
+    setGeneratedSimilarPoems(data.similar_poems || [], Boolean(data.poem));
   } catch (error) {
     $("generatedPoem").textContent = apiErrorMessage("Generation failed.");
+    setGeneratedSimilarPoems([], false);
   } finally {
     setLoading(button, false);
   }
+}
+
+function poemCard(poem) {
+  const excerpt = displayText(poem.poem_text || "").slice(0, 700);
+  return `
+    <article class="poem-card">
+      <strong>${escapeHtml(poem.title || "Untitled")}</strong>
+      <span class="muted">${escapeHtml(poem.author || "Unknown")}</span>
+      <div class="poem-excerpt">${escapeHtml(excerpt)}</div>
+    </article>
+  `;
+}
+
+function renderSimilarPoems(containerId, poems, emptyMessage) {
+  const el = $(containerId);
+  if (!el) return;
+  el.innerHTML = poems.length
+    ? poems.map((poem) => poemCard(poem)).join("")
+    : `<div class="is-empty">${escapeHtml(emptyMessage)}</div>`;
+}
+
+function setGeneratedSimilarPoems(poems, visible) {
+  const panel = $("generatedSimilarPanel");
+  if (!panel) return;
+  panel.hidden = !visible;
+  if (!visible) {
+    $("generatedSimilarPoems").innerHTML = "";
+    return;
+  }
+  renderSimilarPoems("generatedSimilarPoems", poems, "Similar poems appear when embeddings are available.");
 }
 
 function escapeHtml(value) {
@@ -599,9 +677,7 @@ function bindEvents() {
   });
 
   $("searchButton").addEventListener("click", searchGraph);
-  $("searchQuery").addEventListener("keydown", (event) => {
-    if (event.key === "Enter") searchGraph();
-  });
+  bindSearchAutocomplete();
   $("topK").addEventListener("input", updateConnectionValue);
   $("loadMoreEvidence").addEventListener("click", loadMoreEvidence);
   $("analyzeButton").addEventListener("click", analyzePoem);

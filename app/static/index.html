@@ -55,9 +55,10 @@
               <option value="author">Author</option>
             </select>
           </label>
-          <label class="grow">
+          <label class="grow autocomplete-field">
             <span>Search term</span>
-            <input id="searchQuery" value="moon" autocomplete="off" />
+            <input id="searchQuery" value="moon" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchMenu" />
+            <div id="searchMenu" class="autocomplete-menu" role="listbox" hidden></div>
           </label>
           <label>
             <span class="range-label">Connections <output id="topKValue" for="topK">18</output></span>
@@ -214,6 +215,13 @@
             <pre id="generatedPoem">Your generated poem will appear here.</pre>
           </section>
         </div>
+        <section id="generatedSimilarPanel" class="similar-panel generated-similar-panel" hidden>
+          <div class="panel-heading">
+            <h2>Similar poems</h2>
+            <span class="soft-label">Closest matches to the generated poem</span>
+          </div>
+          <div id="generatedSimilarPoems" class="stack similar-grid"></div>
+        </section>
       </section>
     </main>
 

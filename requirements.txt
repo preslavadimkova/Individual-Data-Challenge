@@ -1,4 +1,5 @@
 fastapi
+better-profanity
 ipykernel
 jupyter
 matplotlib
