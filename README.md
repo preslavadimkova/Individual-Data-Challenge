@@ -1,3 +1,9 @@
+---
+title: Poetry Graph App
+sdk: docker
+app_port: 7860
+---
+
 # Find the Poet Inside You
 
 This project is a poetry inspiration app built with natural language processing, a knowledge graph, semantic retrieval, and a FastAPI web interface.
