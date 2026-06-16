@@ -184,9 +184,9 @@ def filter_public_graph_frames(nodes: pd.DataFrame, edges: pd.DataFrame) -> tupl
     blocked_ids = set()
     if not nodes.empty and {"id", "type", "label"}.issubset(nodes.columns):
         symbol_nodes = nodes[nodes["type"] == "symbol"].copy()
-        blocked_ids.update(
-            symbol_nodes[~symbol_nodes["label"].fillna("").map(is_public_symbol_label)]["id"].astype(str).tolist()
-        )
+        if not symbol_nodes.empty:
+            public_symbol_mask = symbol_nodes["label"].fillna("").map(is_public_symbol_label).astype(bool)
+            blocked_ids.update(symbol_nodes[~public_symbol_mask]["id"].astype(str).tolist())
     if not edges.empty:
         for column in ("source", "target"):
             blocked_ids.update(
